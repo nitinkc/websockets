@@ -2,7 +2,7 @@ site_name: Websocket Basics
 site_description: A hands-on guide to WebSockets — server push over one long-lived connection, with a working playground.
 repo_url: https://github.com/nitinkc/websockets
 repo_name: nitinkc/websockets
-site_url:
+site_url: https://nitinkc.github.io/websockets/
 
 # Docs on 8000; the app runs on :8100 (`uvicorn ... --port 8100`) so
 # both run side by side. Override: mkdocs serve -a localhost:<port>
