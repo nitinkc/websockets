@@ -1,0 +1,7 @@
+{
+  // <quiz> blocks are the mkdocs-quiz plugin's syntax — required markup,
+  // not stray inline HTML. Allowed here so docs/quiz.md lints clean.
+  "MD033": {
+    "allowed_elements": ["quiz"]
+  }
+}

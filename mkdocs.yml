@@ -1,0 +1,93 @@
+site_name: Websocket Basics
+site_description: A hands-on guide to WebSockets — server push over one long-lived connection, with a working playground.
+repo_url: https://github.com/nitinkc/websockets
+repo_name: nitinkc/websockets
+site_url:
+
+# Docs on 8000; the app runs on :8100 (`uvicorn ... --port 8100`) so
+# both run side by side. Override: mkdocs serve -a localhost:<port>
+dev_addr: "127.0.0.1:8000"
+
+theme:
+  name: material
+  features:
+    # Navigation
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.path
+    - navigation.top # Back-to-top button
+    - navigation.footer # Prev/Next page links
+    # navigation.instant disabled — breaks live reload (re-enable for production builds)
+    # - navigation.instant
+    # - navigation.instant.progress
+    # Search
+    - search.suggest
+    - search.highlight
+    - search.share
+    # Content
+    - content.code.copy
+    - content.code.annotate # (1) style code annotations
+    - content.tabs.link # Sync tabs across page
+    - content.tooltips
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: brown
+      accent: blue
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: brown
+      accent: blue
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+plugins:
+  - search:
+      lang: en
+  - mkdocs_quiz
+  - mermaid2
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      use_pygments: true
+      guess_lang: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - toc:
+      permalink: true
+      title: On this page
+  - abbr
+  - attr_list
+  - md_in_html
+  - pymdownx.snippets:
+      base_path: docs
+  - tables
+
+nav:
+  - Home: index.md
+  - WebSockets: websockets.md
+  - DevTools: devtools.md
+  - Exercises: exercises.md
+  - Quiz: quiz.md

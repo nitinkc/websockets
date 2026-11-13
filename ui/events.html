@@ -1,0 +1,68 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><title>events — websockets-101</title>
+<style>
+ :root { color-scheme: dark }
+ body { background: #0d1117; color: #c9d1d9 }
+ a { color: #58a6ff } code { color: #e6edf3 }
+ input, button { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px }
+ button:hover:not(:disabled) { background: #21262d } button:disabled, input:disabled { opacity: .5 }
+ body { font: 14px/1.5 system-ui, sans-serif; max-width: 640px; margin: 2rem auto; padding: 0 1rem }
+ #status.up { color: #3fb950 } #status.down { color: #f85149 }
+ input { width: 78%; padding: 6px; font-family: ui-monospace, monospace } button { padding: 6px 12px }
+ #log { background: #010409; border: 1px solid #30363d; border-radius: 4px; padding: 8px; min-height: 12rem; font: 13px ui-monospace, monospace; white-space: pre-wrap }
+ .sys { color: #6e7681 } .evt b { color: #d2a8ff }
+</style></head><body>
+<h1>Event feed</h1>
+<p><a href="/">← dashboard</a> — <code>ws://<span id="host"></span>/ws/events</code> — <span id="status" class="down">disconnected</span></p>
+<p>
+ <input id="msg" type="text" value='{"type": "order.created", "data": {"order_id": 42}}' disabled>
+ <button id="send" disabled>emit</button>
+ <button id="toggle">connect</button>
+</p>
+<p><em>Send JSON as above to emit an event — or plain text, which becomes
+a <code>message</code> event. Every connected client (including you)
+gets the broadcast back.</em></p>
+<div id="log"></div>
+<script>
+document.getElementById("host").textContent = location.host;
+const log = document.getElementById("log");
+const statusEl = document.getElementById("status");
+const msg = document.getElementById("msg");
+const sendBtn = document.getElementById("send");
+const toggle = document.getElementById("toggle");
+let ws = null;
+
+function line(cls, html) {
+  const d = document.createElement("div");
+  d.className = cls; d.innerHTML = html;
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+function setState(on) {
+  statusEl.textContent = on ? "connected" : "disconnected";
+  statusEl.className = on ? "up" : "down";
+  msg.disabled = sendBtn.disabled = !on;
+  toggle.textContent = on ? "disconnect" : "connect";
+}
+function showEvent(e) {
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  line("evt", `<b>${esc(e.type)}</b>  <code>${esc(e.id)}</code>  ${esc(e.created_at)}` +
+              `<br>&nbsp;&nbsp;${esc(JSON.stringify(e.data))}`);
+}
+function connect() {
+  ws = new WebSocket(`${location.origin.replace("http", "ws")}/ws/events`);
+  ws.onopen = () => { setState(true); line("sys", "— connected, listening —"); msg.focus(); };
+  ws.onmessage = (m) => { try { showEvent(JSON.parse(m.data)); } catch { line("evt", m.data); } };
+  ws.onclose = () => { setState(false); line("sys", "— closed —"); ws = null; };
+}
+toggle.onclick = () => (ws ? ws.close() : connect());
+sendBtn.onclick = () => {
+  if (!ws || !msg.value) return;
+  ws.send(msg.value);   // emitting IS sending — the broadcast you see below is the ack
+  msg.select();
+};
+msg.onkeydown = (e) => { if (e.key === "Enter") sendBtn.click(); };
+
+connect();
+</script>
+</body></html>

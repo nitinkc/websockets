@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><title>echo — websockets-101</title>
+<style>
+ :root { color-scheme: dark }
+ body { background: #0d1117; color: #c9d1d9 }
+ a { color: #58a6ff } code { color: #e6edf3 }
+ input, button { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px }
+ button:hover:not(:disabled) { background: #21262d } button:disabled, input:disabled { opacity: .5 }
+ body { font: 14px/1.5 system-ui, sans-serif; max-width: 560px; margin: 2rem auto; padding: 0 1rem }
+ #status.up { color: #3fb950 } #status.down { color: #f85149 }
+ input { width: 70%; padding: 6px } button { padding: 6px 12px }
+ #log { background: #010409; border: 1px solid #30363d; border-radius: 4px; padding: 8px; min-height: 12rem; font: 13px ui-monospace, monospace; white-space: pre-wrap }
+ .out { color: #8b949e } .in { color: #3fb950 } .sys { color: #6e7681 }
+</style></head><body>
+<h1>Echo socket</h1>
+<p><a href="/">← dashboard</a> — <code>ws://<span id="host"></span>/ws/echo</code> — <span id="status" class="down">disconnected</span></p>
+<p>
+ <input id="msg" type="text" placeholder="type anything, it comes straight back…" disabled>
+ <button id="send" disabled>send</button>
+ <button id="toggle">connect</button>
+</p>
+<div id="log"></div>
+<script>
+document.getElementById("host").textContent = location.host;
+const log = document.getElementById("log");
+const statusEl = document.getElementById("status");
+const msg = document.getElementById("msg");
+const sendBtn = document.getElementById("send");
+const toggle = document.getElementById("toggle");
+let ws = null;
+
+function line(cls, text) {
+  const d = document.createElement("div");
+  d.className = cls; d.textContent = text;
+  log.appendChild(d); log.scrollTop = log.scrollHeight;
+}
+function setState(on) {
+  statusEl.textContent = on ? "connected" : "disconnected";
+  statusEl.className = on ? "up" : "down";
+  msg.disabled = sendBtn.disabled = !on;
+  toggle.textContent = on ? "disconnect" : "connect";
+}
+function connect() {
+  // http: -> ws: and https: -> wss:
+  ws = new WebSocket(`${location.origin.replace("http", "ws")}/ws/echo`);
+  ws.onopen = () => { setState(true); line("sys", "— connected —"); msg.focus(); };
+  ws.onmessage = (e) => line("in", `← ${e.data}`);
+  ws.onclose = () => { setState(false); line("sys", "— closed —"); ws = null; };
+}
+toggle.onclick = () => (ws ? ws.close() : connect());
+sendBtn.onclick = () => {
+  if (!ws || !msg.value) return;
+  ws.send(msg.value);
+  line("out", `→ ${msg.value}`);
+  msg.value = "";
+};
+msg.onkeydown = (e) => { if (e.key === "Enter") sendBtn.click(); };
+
+connect();
+</script>
+</body></html>

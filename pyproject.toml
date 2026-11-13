@@ -1,0 +1,20 @@
+[project]
+name = "websockets-101"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.162.4",
+    "uvicorn[standard]>=0.54.0",
+    "websockets>=17.4",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "mkdocs-material>=9.5.0",
+    "mkdocs-quiz>=1.7.1",
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

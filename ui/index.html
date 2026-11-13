@@ -1,0 +1,47 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><title>websockets-101</title>
+<style>
+ :root { color-scheme: dark }
+ body { background: #0d1117; color: #c9d1d9 }
+ a { color: #58a6ff } code { color: #e6edf3 }
+ input, button { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px }
+ button:hover:not(:disabled) { background: #21262d } button:disabled, input:disabled { opacity: .5 }
+ body { font: 14px/1.5 system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem }
+ table { border-collapse: collapse; width: 100% } td, th { border: 1px solid #30363d; padding: 4px 8px; text-align: left }
+</style></head><body>
+<h1>websockets-101</h1>
+<p>Every socket has its own interactive page — each one is a real
+WebSocket client, live in your browser:</p>
+<table><tr><th>page</th><th>talks to</th><th>what it does</th></tr>
+ <tr><td><a href="/echo">/echo</a></td><td><code>/ws/echo</code></td><td>type a message, watch the same socket send it straight back</td></tr>
+ <tr><td><a href="/events">/events</a></td><td><code>/ws/events</code></td><td>emit events, watch the broadcast land on every connected client</td></tr>
+ <tr><td><a href="/ticker">/ticker</a></td><td><code>/ws/ticker</code></td><td>live stock ticker — snapshot on connect, then a tick every second</td></tr>
+</table>
+<h2>Also here</h2>
+<table><tr><th>url</th><th>intent</th><th>what it is</th></tr>
+ <tr><td><a href="/docs">/docs</a></td><td>GET</td><td>Swagger UI — the auto-generated API reference</td></tr>
+ <tr><td><a href="/redoc">/redoc</a></td><td>GET</td><td>ReDoc — the other API reference</td></tr>
+ <tr><td><a href="/health">/health</a></td><td>GET</td><td>health check</td></tr>
+ <tr><td><a href="/api/events">/api/events</a></td><td>GET</td><td>JSON snapshot of the broadcast log — what this page polls</td></tr>
+ <tr><td><a href="http://127.0.0.1:8000">127.0.0.1:8000</a></td><td>docs</td><td>the guide, exercises and quiz — up while <code>mkdocs serve</code> runs</td></tr>
+</table>
+<h2>Events broadcast <small>(live — polls /api/events every 2s, no page refresh)</small></h2>
+<p>Clients on <code>/ws/events</code>: <span id="clients">–</span></p>
+<table><thead><tr><th>type</th><th>id</th><th>at</th></tr></thead><tbody id="events"></tbody></table>
+<script>
+const tbody = document.getElementById("events");
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+async function poll() {
+  try {
+    const d = await (await fetch("/api/events")).json();
+    document.getElementById("clients").textContent = d.clients;
+    tbody.innerHTML = d.events.map(e =>
+      `<tr><td>${esc(e.type)}</td><td><code>${esc(e.id)}</code></td><td>${esc(e.created_at)}</td></tr>`
+    ).join("") || '<tr><td colspan="3"><em>none yet — fire one from <a href="/events">/events</a></em></td></tr>';
+  } catch {}
+}
+poll();
+setInterval(poll, 2000);
+</script>
+</body></html>

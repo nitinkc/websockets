@@ -1,0 +1,74 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><title>ticker — websockets-101</title>
+<style>
+ :root { color-scheme: dark }
+ body { background: #0d1117; color: #c9d1d9 }
+ a { color: #58a6ff } code { color: #e6edf3 }
+ input, button { background: #161b22; color: #c9d1d9; border: 1px solid #30363d; border-radius: 4px }
+ button:hover:not(:disabled) { background: #21262d } button:disabled, input:disabled { opacity: .5 }
+ body { font: 14px/1.5 system-ui, sans-serif; max-width: 560px; margin: 2rem auto; padding: 0 1rem }
+ #status { font-weight: 600 }
+ #status.up { color: #3fb950 } #status.down { color: #f85149 }
+ table { border-collapse: collapse; width: 100%; margin-top: 1rem }
+ td, th { border: 1px solid #30363d; padding: 6px 10px; text-align: right }
+ td:first-child, th:first-child { text-align: left }
+ .up { color: #3fb950 } .down { color: #f85149 }
+ tr.flash-up td { background: #12361f } tr.flash-down td { background: #3d1414 }
+</style></head><body>
+<h1>Stock ticker</h1>
+<p><a href="/">← dashboard</a> — feed: <code>/ws/ticker</code> — <span id="status" class="down">connecting…</span></p>
+<table><thead><tr><th>symbol</th><th>price</th><th>chg</th></tr></thead>
+<tbody id="rows"><tr><td colspan="3"><em>waiting for quotes…</em></td></tr></tbody></table>
+<script>
+const tbody = document.getElementById("rows");
+const statusEl = document.getElementById("status");
+const cells = {};  // symbol -> <tr>
+let retryMs = 1000;
+
+function render(q) {
+  let row = cells[q.symbol];
+  if (!row) {
+    row = document.createElement("tr");
+    row.innerHTML = `<td>${q.symbol}</td><td class="price"></td><td class="chg"></td>`;
+    cells[q.symbol] = row;
+    tbody.appendChild(row);
+  }
+  row.querySelector(".price").textContent = q.price.toFixed(2);
+  const chg = row.querySelector(".chg");
+  chg.textContent = (q.change > 0 ? "+" : "") + q.change.toFixed(2);
+  chg.className = "chg " + q.dir;
+  row.className = q.dir === "flat" ? "" : "flash-" + q.dir;
+  clearTimeout(row._t);
+  row._t = setTimeout(() => (row.className = ""), 600);
+}
+
+function connect() {
+  // http: -> ws: and https: -> wss: — same page works over TLS untouched.
+  const ws = new WebSocket(`${location.origin.replace("http", "ws")}/ws/ticker`);
+
+  ws.onopen = () => {
+    retryMs = 1000;
+    statusEl.textContent = "live";
+    statusEl.className = "up";
+  };
+
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if (!tbody.dataset.ready) { tbody.innerHTML = ""; tbody.dataset.ready = "1"; }
+    msg.data.forEach(render);   // snapshot and tick share the same quote shape
+  };
+
+  // Real-world part: sockets die. Reconnect with capped backoff — the
+  // feed itself is disposable, the next snapshot re-syncs the board.
+  ws.onclose = () => {
+    statusEl.textContent = `disconnected — retrying in ${retryMs / 1000}s`;
+    statusEl.className = "down";
+    setTimeout(connect, retryMs);
+    retryMs = Math.min(retryMs * 2, 10000);
+  };
+}
+
+connect();
+</script>
+</body></html>
